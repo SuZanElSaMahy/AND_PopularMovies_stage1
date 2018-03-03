@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">PopularMovies_p1</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="meun_item_most_popular">Most Popular</string>
+    <string name="meun_item_highest_rated">Highest Rated</string>
+</resources>
