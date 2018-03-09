@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.suzanelsamahy.popularmovies_p1.Utilities.ConnectivityReceiver;
 import com.suzanelsamahy.popularmovies_p1.Utilities.Constants;
 import com.suzanelsamahy.popularmovies_p1.adapters.MovieRecyclerAdapter;
 import com.suzanelsamahy.popularmovies_p1.model.Movie;
@@ -31,7 +32,7 @@ import java.util.List;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class MainMovieFragment extends Fragment implements IMovieView {
+public class MainMovieFragment extends Fragment implements IMovieView,ConnectivityReceiver.ConnectivityReceiverListener {
 
 
     private List<Movie> pList = null;
@@ -43,7 +44,6 @@ public class MainMovieFragment extends Fragment implements IMovieView {
     public MainMovieFragment() {
         // Required empty public constructor
     }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,8 +58,7 @@ public class MainMovieFragment extends Fragment implements IMovieView {
         View view = inflater.inflate(R.layout.fragment_main_movie, container, false);
         recyclerView = (RecyclerView) view.findViewById(R.id.main_rv);
         moviePresenter = new MoviePresenter(this);
-        moviePresenter.getPopularMovies(Constants.API_KEY);
-        moviePresenter.getTopMovies(Constants.API_KEY);
+        checkConnection();
         setupRecyclerView(new ArrayList<Movie>());
         return view;
     }
@@ -79,14 +78,23 @@ public class MainMovieFragment extends Fragment implements IMovieView {
             case R.id.popular:
 
                 item.setChecked(item.isChecked());
-                mAdapter.updateMovies(pList);
-                Toast.makeText(getActivity(), "popular", Toast.LENGTH_LONG).show();
+                if(checkConnection()){
+                    mAdapter.updateMovies(pList);
+                    Toast.makeText(getActivity(), "popular", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getActivity(),"no connection",Toast.LENGTH_LONG).show();
+                }
+
                 return true;
             case R.id.rate:
 
                 item.setChecked(item.isChecked());
-                mAdapter.updateMovies(tList);
-                Toast.makeText(getActivity(), "rated", Toast.LENGTH_LONG).show();
+                if(checkConnection()){
+                    mAdapter.updateMovies(tList);
+                    Toast.makeText(getActivity(), "rated", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getActivity(),"no connection",Toast.LENGTH_LONG).show();
+                }
                 return true;
 
             default:
@@ -99,7 +107,6 @@ public class MainMovieFragment extends Fragment implements IMovieView {
     @Override
     public void onPopularMoviesRetrieved(List<Movie> movies) {
         pList = movies;
-
     }
 
     @Override
@@ -130,9 +137,39 @@ public class MainMovieFragment extends Fragment implements IMovieView {
 
     }
 
+    @Override
+    public void onNetworkConnectionChanged(boolean isConnected) {
+        if(isConnected){
+            moviePresenter.getPopularMovies(Constants.API_KEY);
+            moviePresenter.getTopMovies(Constants.API_KEY);
+        } else {
+            Toast.makeText(getActivity(),"no connection",Toast.LENGTH_LONG).show();
+        }
+
+    }
+
 
     public interface OpenMovieDetails {
         void openMovieDetails(int position);
+    }
+
+
+    private boolean checkConnection() {
+        boolean isConnected= ConnectivityReceiver.isConnected();
+        if(isConnected){
+            moviePresenter.getPopularMovies(Constants.API_KEY);
+            moviePresenter.getTopMovies(Constants.API_KEY);
+        }
+        return isConnected;
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // register connection status listener
+        MovieApplication.getInstance().setConnectivityListener(this);
     }
 
 
